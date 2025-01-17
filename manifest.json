@@ -1,0 +1,22 @@
+{
+  "name": "LiveWorksheets",
+  "description": "Base Level Extension",
+  "version": "1.0",
+  "manifest_version": 3,
+  "permissions": ["scripting", "activeTab"],
+  "action":
+  {
+    "default_icon": {}
+  },
+  "background": {
+    "service_worker": "dist/src/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.liveworksheets.com/w/en/english-second-language-esl/*"],
+      "js": ["dist/src/controller.js"],
+      "world": "MAIN"
+    }
+  ]
+}
