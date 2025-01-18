@@ -8,7 +8,7 @@ type ButtonAnswer = {
     data: boolean
 }
 
-function putAnswers(answers?:string):void {
+export function putAnswers(answers?:string):void {
     let ans = (answers ?? "true|||false|||false|||true|||true|||false|||true|||false|||false|||true|||true|||false|||true|||false|||true|||false|||false|||true|||true|||false|||false|||true|||true|||false|||were you going|||Did you enjoy|||was always taking|||didn't have|||!was going|||became|||was working|||heard|||appeared|||threw|||false|||true|||true|||false|||true|||false|||true|||false|||true|||false|||true|||false|||true|||false|||true|||false|||false|||true|||true|||false|||true|||false|||false|||true|||true|||false|||true|||false|||true|||false|||true|||false|||had written|||had stayed|||had been waiting|||had been running|||had seen|||!had been knowing|||had been getting|||hadn't been having|||hadn't eaten|||had been listening|||true|||false|||false|||false|||false|||false|||true|||false|||false|||true|||false|||false|||false|||false|||false|||true|||false|||false|||false|||true|||true|||false|||false|||false|||false|||false|||false|||true|||false|||true|||false|||false").split('|||')
     let data: Answer[] = []
     let i = 0
@@ -34,4 +34,8 @@ function putAnswers(answers?:string):void {
             i = i + 1
         }
     }
+}
+export function hello()
+{
+    return "hello"
 }

@@ -1,2 +1,4 @@
-import * as answering from "./answering.js"
-(window as any).answering = answering
+import * as answers from "./answering";
+
+(window as any).hello = answers.hello;
+(window as any).answers = answers;
