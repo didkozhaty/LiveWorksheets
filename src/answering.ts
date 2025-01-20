@@ -83,7 +83,7 @@ export function getAnswers()
             }
         }
     }
-    return fields;
+    return fields.join('|||');
 }
 
 export function clickAll()
