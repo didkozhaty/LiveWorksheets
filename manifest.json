@@ -14,7 +14,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://www.liveworksheets.com/w/en/english-second-language-esl/*"],
+      "matches": ["https://www.liveworksheets.com/**"],
       "js": ["dist/controller.js"],
       "world": "MAIN"
     }
