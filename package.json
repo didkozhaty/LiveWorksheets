@@ -18,7 +18,8 @@
   "author": "",
   "contributors": [],
   "scripts": {
-    "build": "webpack --config webpack/webpack.config.js"
+    "build": "webpack --config webpack/webpack.config.js",
+    "install-webpack": "npm install --save-dev webpack webpack-cli webpack-merge copy-webpack-plugin"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.297",
