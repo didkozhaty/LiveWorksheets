@@ -31,26 +31,49 @@ export function putAnswers(answers?:string):void {
                     break;
                 case "text":
                     const dat = data[i] as TextAnswer
-                    if(dat.data.startsWith('!'))
-                    {
-                        dat.data = dat.data.substring(1)
+                    if(dat.data.startsWith('!')) {
                         el.setAttribute("oldColor", el.style.background)
-                        el.style.background = "red";
                         const onClick = (e:MouseEvent) => {
                             const elem = e.target as HTMLElement
                             elem.style.background = el.getAttribute("oldColor")??"white"
                             el.removeAttribute("oldColor")
                             elem.removeEventListener("click", onClick)
                         }
+                        dat.data = dat.data.substring(1)
+                        el.style.background = "red";
                         el.addEventListener("click", onClick)
                     }
                     el.textContent = (data[i] as TextAnswer).data
+                    el.dispatchEvent(new Event("blur", {bubbles: true}))
             }
             i = i + 1
         }
     }
 }
-
+export function getReadyAnswers() {
+    let doc = document.getElementById("worksheet-preview-elements")?.children
+    const fields = []
+    if(doc){
+        for (let k of doc) {
+            switch (k.getAttribute("class"))
+            {
+                case "absolute text-center leading-none z-[4] bg-gray-505 text-[14px] text-blue-10 border border-gray-51 rounded-[4px] shadow-[0_0_8px] shadow-gray-60":
+                    fields.push(k.textContent)
+                    break
+                case "worksheet-select-div rounded-[4px] shadow-[0_0_3px_0] shadow-gray-610 bg-green-120":
+                    fields.push(true)
+                    break
+                case "worksheet-select-div":
+                    fields.push(false)
+                    break
+                default:
+                    fields.push('')
+                    console.error("unknown type")
+            }
+        }
+    }
+    return fields.join('|||');
+}
 export function getAnswers()
 {
     let doc = document.getElementById("worksheet-preview-elements")?.children
@@ -94,21 +117,11 @@ export function clickAll()
     })
 }
 
-// export function getFuncs(element: HTMLElement):Map<string, any>|void {
-//     const attributes = new Map<string, any>()
-//     Object.getOwnPropertyNames(element).forEach((name) => {
-//         attributes.set(name, element[name as keyof typeof element])
-//     })
-//     const funcs = new Map<string, any>()
-//     attributes.forEach((value, key) => {
-//         if (value.type === "void") {
-//             funcs.set(key, value)
-//         }
-//     })
-//     return attributes;
-// }
-
-
 export function hello() {
     return "hello"
+}
+
+export function showAnswers() {
+    // @ts-ignore
+    jQuery("#worksheet-preview").worksheetPreview("validation",{clicked:!1,showAnswers:!0,showRightAnswers:!0});
 }
