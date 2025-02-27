@@ -125,3 +125,9 @@ export function showAnswers() {
     // @ts-ignore
     jQuery("#worksheet-preview").worksheetPreview("validation",{clicked:!1,showAnswers:!0,showRightAnswers:!0});
 }
+export function showInvisibles(color = "black") {
+    const invisibles = document.querySelectorAll(`.worksheet-draggable-div,.worksheet-drop-div,.worksheet-join-div,.worksheet-join-div-cursor`)
+    invisibles.forEach((element) => {
+        (element as HTMLElement).style.border = "solid black 5px"
+    })
+}

@@ -16,4 +16,6 @@ console.log("answers");
         console.log("Just clicks all the elements")
     else if (command === 'showAnswers')
         console.log("Shows all answers, but you can't submit it on this tab")
+    else if (command === 'showInvisibles')
+        console.log("Adds borders to object rendered as part of the image or just invisible. Useful in cases when they've been place in dumb places so you can't find it")
 }
