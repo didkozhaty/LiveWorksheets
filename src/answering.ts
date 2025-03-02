@@ -8,43 +8,80 @@ type ButtonAnswer = {
     data: boolean
 }
 
-export function putAnswers(answers?:string):void {
-    let ans = (answers ?? "true|||false|||false|||true|||true|||false|||true|||false|||false|||true|||true|||false|||true|||false|||true|||false|||false|||true|||true|||false|||false|||true|||true|||false|||were you going|||Did you enjoy|||was always taking|||didn't have|||!was going|||became|||was working|||heard|||appeared|||threw|||false|||true|||true|||false|||true|||false|||true|||false|||true|||false|||true|||false|||true|||false|||true|||false|||false|||true|||true|||false|||true|||false|||false|||true|||true|||false|||true|||false|||true|||false|||true|||false|||had written|||had stayed|||had been waiting|||had been running|||had seen|||!had been knowing|||had been getting|||hadn't been having|||hadn't eaten|||had been listening|||true|||false|||false|||false|||false|||false|||true|||false|||false|||true|||false|||false|||false|||false|||false|||true|||false|||false|||false|||true|||true|||false|||false|||false|||false|||false|||false|||true|||false|||true|||false|||false").split('|||')
-    let data: Answer[] = []
+const ignorableClasses = ["worksheet-blank-div", "worksheet-audioplayer", "worksheet-listen-div", "worksheet-link-div", "worksheet-powerpoint-iframe", "worksheet-iframe"]
+
+function isIgnorableClass(element: HTMLElement) {
+    let found = false
+    console.log(element)
+    try {
+        ignorableClasses.forEach((value) => {
+            if(found)
+                return
+            if(element.classList.contains(value))
+                found = true
+        })
+    }
+    catch(e) {
+        console.error(e, element)
+    }
+    return found
+}
+function isInedibleText(element: HTMLElement) {
+    return element.getAttribute("spellcheck") == "false" && !element.hasAttribute("contenteditable")
+}
+function isBoxBeforeMicrofone(element: HTMLElement) {
+    const parentChildren = Array.from(element.parentElement?.children ?? []);
+    const index = parentChildren.indexOf(element) + 1;
+    return parentChildren[index] && parentChildren[index].classList.contains("worksheet-microphone-div");
+}
+export function isIgnorable(element: HTMLElement): boolean {
+    return isIgnorableClass(element) || isInedibleText(element) || isBoxBeforeMicrofone(element);
+}
+
+function isOpenAnswer(element: HTMLElement): boolean {
+    return element.hasAttribute("spellcheck");
+}
+function isButton(element: HTMLElement): boolean {
+    let retme = false;
+    const buttonClasses = ["worksheet-tickbox", "worksheet-select-div"]
+    ignorableClasses.forEach((value) => {
+        if(retme)
+            return
+        if(element.classList.contains(value))
+            retme = true
+    })
+    return retme
+}
+
+export function putAnswers(answers:string):void {
+    let ans = answers.split('|||')
     let i = 0
     let doc = document.getElementById("worksheet-preview-elements")
     const fields = doc?.children
-    for (let k of ans) {
-        if (['true', 'false'].includes(k)) {
-            data.push({type: "button", data: (k === 'true')})
-        } else {
-            data.push({type: "text", data: k})
-        }
-    }
     if (fields) {
         for (let field of fields) {
             const el = field as HTMLElement
-            switch (data[i].type) {
-                case "button":
-                    if (data[i].data)
-                        el.click()
-                    break;
-                case "text":
-                    const dat = data[i] as TextAnswer
-                    if(dat.data.startsWith('!')) {
-                        el.setAttribute("oldColor", el.style.background)
-                        const onClick = (e:MouseEvent) => {
-                            const elem = e.target as HTMLElement
-                            elem.style.background = el.getAttribute("oldColor")??"white"
-                            el.removeAttribute("oldColor")
-                            elem.removeEventListener("click", onClick)
-                        }
-                        dat.data = dat.data.substring(1)
-                        el.style.background = "red";
-                        el.addEventListener("click", onClick)
+            let answer = ans[i]
+            if (el.hasAttribute("spellcheck")) {
+                if(answer.startsWith('!')) {
+                    el.setAttribute("oldColor", el.style.background)
+                    const onClick = (e:MouseEvent) => {
+                        const elem = e.target as HTMLElement
+                        elem.style.background = el.getAttribute("oldColor")??"white"
+                        el.removeAttribute("oldColor")
+                        elem.removeEventListener("click", onClick)
                     }
-                    el.textContent = (data[i] as TextAnswer).data
-                    el.dispatchEvent(new Event("blur", {bubbles: true}))
+                    answer = answer.substring(1)
+                    el.style.background = "red";
+                    el.addEventListener("click", onClick)
+                }
+                el.textContent = answer
+                el.dispatchEvent(new Event("blur", {bubbles: true}))
+            } else if (el.classList.contains('worksheet-select-div')) {
+                if (answer === 'true')
+                    el.click()
+            } else if(!isIgnorable(el)){
+                console.error("Unknown type")
             }
             i = i + 1
         }
@@ -55,20 +92,23 @@ export function getReadyAnswers() {
     const fields = []
     if(doc){
         for (let k of doc) {
-            switch (k.getAttribute("class"))
+            const el = k as HTMLElement
+            if (isIgnorable(el)){
+                fields.push('')
+            }
+            else if (isOpenAnswer(el)) {
+                fields.push(k.textContent)
+            }
+            else if (isButton(el))
             {
-                case "absolute text-center leading-none z-[4] bg-gray-505 text-[14px] text-blue-10 border border-gray-51 rounded-[4px] shadow-[0_0_8px] shadow-gray-60":
-                    fields.push(k.textContent)
-                    break
-                case "worksheet-select-div rounded-[4px] shadow-[0_0_3px_0] shadow-gray-610 bg-green-120":
-                    fields.push(true)
-                    break
-                case "worksheet-select-div":
-                    fields.push(false)
-                    break
-                default:
-                    fields.push('')
-                    console.error("unknown type")
+                if(el.classList.contains("worksheet-tickbox-correct") || el.classList.contains("bg-green-120"))
+                    fields.push("true")
+                else
+                    fields.push("false")
+            }
+            else {
+                fields.push('')
+                console.error("Unknown type", el)
             }
         }
     }
@@ -80,29 +120,24 @@ export function getAnswers()
     const fields = []
     if(doc){
         for (let k of doc) {
-            if (k.hasAttribute("spellcheck")) {
-                switch (k.getAttribute("class")) {
-                    case "absolute text-center leading-none z-[4] bg-gray-505 text-[14px] text-blue-10 border border-gray-51 rounded-[4px] shadow-[0_0_8px] shadow-gray-60 !bg-green-120":
-                        fields.push(k.textContent)
-                        break
-                    case "absolute text-center leading-none z-[4] bg-gray-505 text-[14px] text-blue-10 border border-gray-51 rounded-[4px] shadow-[0_0_8px] shadow-gray-60 !bg-red-900":
-                        fields.push('!' + k.textContent)
-                        break
-                    default:
-                        console.log("error", k)
-                }
-            } else {
-                switch (k.getAttribute("class")) {
-                    case "worksheet-select-div shadow-[0_0_3px_0] shadow-gray-610 bg-green-120":
-                        fields.push(true)
-                        break
-                    case "worksheet-select-div !bg-red-900 !border-gray-605 rounded-[4px]":
-                    case "worksheet-select-div":
-                        fields.push(false)
-                        break
-                    default:
-                        console.log("error", k)
-                }
+            const el = k as HTMLElement
+
+            if (isIgnorable(el)){
+                fields.push('')
+            }
+            else if (isOpenAnswer(el)) {
+                fields.push((el.classList.contains("!bg-red-900") ? '!' : '') + el.textContent)
+            }
+            else if (isButton(el))
+            {
+                if(el.classList.contains("worksheet-tickbox-correct") || el.classList.contains("bg-green-120"))
+                    fields.push("true")
+                else
+                    fields.push("false")
+            }
+            else {
+                fields.push('')
+                console.error("Unknown type", el)
             }
         }
     }
@@ -126,7 +161,7 @@ export function showAnswers() {
     jQuery("#worksheet-preview").worksheetPreview("validation",{clicked:!1,showAnswers:!0,showRightAnswers:!0});
 }
 export function showInvisibles(color = "black") {
-    const invisibles = document.querySelectorAll(`.worksheet-draggable-div,.worksheet-drop-div,.worksheet-join-div,.worksheet-join-div-cursor`)
+    const invisibles = document.querySelectorAll(`.worksheet-draggable-div,.worksheet-drop-div,.worksheet-join-div,.worksheet-join-div-cursor, .worksheet-listen-div`)
     invisibles.forEach((element) => {
         (element as HTMLElement).style.border = "solid black 5px"
     })
