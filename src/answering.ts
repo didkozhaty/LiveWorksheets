@@ -12,7 +12,6 @@ const ignorableClasses = ["worksheet-blank-div", "worksheet-audioplayer", "works
 
 function isIgnorableClass(element: HTMLElement) {
     let found = false
-    console.log(element)
     try {
         ignorableClasses.forEach((value) => {
             if(found)
@@ -44,7 +43,7 @@ function isOpenAnswer(element: HTMLElement): boolean {
 function isButton(element: HTMLElement): boolean {
     let retme = false;
     const buttonClasses = ["worksheet-tickbox", "worksheet-select-div"]
-    ignorableClasses.forEach((value) => {
+    buttonClasses.forEach((value) => {
         if(retme)
             return
         if(element.classList.contains(value))
@@ -62,7 +61,11 @@ export function putAnswers(answers:string):void {
         for (let field of fields) {
             const el = field as HTMLElement
             let answer = ans[i]
-            if (el.hasAttribute("spellcheck")) {
+            i = i + 1
+            if (isIgnorable(el)) {
+                continue
+            }
+            if (isOpenAnswer(el)) {
                 if(answer.startsWith('!')) {
                     el.setAttribute("oldColor", el.style.background)
                     const onClick = (e:MouseEvent) => {
@@ -77,13 +80,15 @@ export function putAnswers(answers:string):void {
                 }
                 el.textContent = answer
                 el.dispatchEvent(new Event("blur", {bubbles: true}))
-            } else if (el.classList.contains('worksheet-select-div')) {
+            }
+            else if (isButton(el))
+            {
                 if (answer === 'true')
                     el.click()
-            } else if(!isIgnorable(el)){
-                console.error("Unknown type")
             }
-            i = i + 1
+            else {
+                console.error("Unknown type", el)
+            }
         }
     }
 }
@@ -93,11 +98,11 @@ export function getReadyAnswers() {
     if(doc){
         for (let k of doc) {
             const el = k as HTMLElement
-            if (isIgnorable(el)){
-                fields.push('')
-            }
-            else if (isOpenAnswer(el)) {
+            if (isOpenAnswer(el)) {
                 fields.push(k.textContent)
+            }
+            else if (isIgnorable(el)){
+                fields.push('')
             }
             else if (isButton(el))
             {
