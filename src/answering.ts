@@ -51,6 +51,9 @@ function isButton(element: HTMLElement): boolean {
     })
     return retme
 }
+export function isSelect(element: HTMLElement) {
+    return element.firstChild?.nodeName === 'SELECT'
+}
 
 export function putAnswers(answers:string):void {
     let ans = answers.split('|||')
@@ -86,6 +89,11 @@ export function putAnswers(answers:string):void {
                 if (answer === 'true')
                     el.click()
             }
+            else if (isSelect(el))
+            {
+                (el.firstChild as HTMLSelectElement).selectedIndex = Number.parseInt(answer)
+                el.firstChild?.dispatchEvent(new Event("change", {bubbles: true} ))
+            }
             else {
                 console.error("Unknown type", el)
             }
@@ -110,6 +118,10 @@ export function getReadyAnswers() {
                     fields.push("true")
                 else
                     fields.push("false")
+            }
+            else if (isSelect(el))
+            {
+                fields.push((el.firstChild as HTMLSelectElement).selectedIndex)
             }
             else {
                 fields.push('')
@@ -139,6 +151,10 @@ export function getAnswers()
                     fields.push("true")
                 else
                     fields.push("false")
+            }
+            else if (isSelect(el))
+            {
+                fields.push((el.firstChild as HTMLSelectElement).selectedIndex)
             }
             else {
                 fields.push('')
