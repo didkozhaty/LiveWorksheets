@@ -8,7 +8,7 @@ type ButtonAnswer = {
     data: boolean
 }
 
-const ignorableClasses = ["worksheet-blank-div", "worksheet-audioplayer", "worksheet-listen-div", "worksheet-link-div", "worksheet-powerpoint-iframe", "worksheet-iframe"]
+const ignorableClasses = ["worksheet-blank-div", "worksheet-drop-div", "worksheet-audioplayer", "worksheet-listen-div", "worksheet-link-div", "worksheet-powerpoint-iframe", "worksheet-iframe"]
 
 function isIgnorableClass(element: HTMLElement) {
     let found = false
@@ -26,7 +26,7 @@ function isIgnorableClass(element: HTMLElement) {
     return found
 }
 function isInedibleText(element: HTMLElement) {
-    return element.getAttribute("spellcheck") == "false" && !element.hasAttribute("contenteditable")
+    return element.getAttribute("spellcheck") == "false" && !element.hasAttribute("contenteditable") && !(element.classList.contains('!bg-green-120') || element.classList.contains('!bg-red-900'))
 }
 function isBoxBeforeMicrofone(element: HTMLElement) {
     const parentChildren = Array.from(element.parentElement?.children ?? []);
@@ -53,6 +53,17 @@ function isButton(element: HTMLElement): boolean {
 }
 export function isSelect(element: HTMLElement) {
     return element.firstChild?.nodeName === 'SELECT'
+}
+function isDraggable(element: HTMLElement) {
+    let retme = false;
+    const draggableClasses = ["worksheet-draggable-div"]
+    draggableClasses.forEach((value) => {
+        if(retme)
+            return
+        if(element.classList.contains(value))
+            retme = true
+    })
+    return retme
 }
 
 export function putAnswers(answers:string):void {
@@ -94,20 +105,33 @@ export function putAnswers(answers:string):void {
                 (el.firstChild as HTMLSelectElement).selectedIndex = Number.parseInt(answer)
                 el.firstChild?.dispatchEvent(new Event("change", {bubbles: true} ))
             }
+            else if (isDraggable(el)) {
+                el.dispatchEvent(new MouseEvent("mousedown", {bubbles: true} ))
+                const [x, y] = answer.split(";")
+                el.style.left = x
+                el.style.top = y
+                el.dispatchEvent(new MouseEvent("mouseup", {bubbles: true} ))
+            }
             else {
                 console.error("Unknown type", el)
             }
         }
     }
 }
-export function getReadyAnswers() {
+export function getReadyAnswers(isRaw = false) {
     let doc = document.getElementById("worksheet-preview-elements")?.children
     const fields = []
     if(doc){
         for (let k of doc) {
             const el = k as HTMLElement
             if (isOpenAnswer(el)) {
-                fields.push(k.textContent)
+                const text = k.textContent ?? '';
+                if(isRaw)
+                    fields.push(text)
+                else {
+                    const texts = text.split('/');
+                    fields.push(texts[Math.floor(Math.random() * texts.length)]);
+                }
             }
             else if (isIgnorable(el)){
                 fields.push('')
@@ -122,6 +146,8 @@ export function getReadyAnswers() {
             else if (isSelect(el))
             {
                 fields.push((el.firstChild as HTMLSelectElement).selectedIndex)
+            } else if (isDraggable(el)) {
+                fields.push(`${el.style.left};${el.style.top}`)
             }
             else {
                 fields.push('')
@@ -155,6 +181,9 @@ export function getAnswers()
             else if (isSelect(el))
             {
                 fields.push((el.firstChild as HTMLSelectElement).selectedIndex)
+            }
+            else if (isDraggable(el)) {
+                fields.push(`${el.style.left};${el.style.top}`)
             }
             else {
                 fields.push('')

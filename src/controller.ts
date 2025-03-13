@@ -10,7 +10,7 @@ console.log("answers");
     else if (command === 'getAnswers')
         console.log("This command returns a string with answers separated by |||. Use it when you did work by yourself and checked it already")
     else if (command === 'getReadyAnswers')
-        console.log("This command returns a string with answers separated by |||. Use it when you use showAnswers command")
+        console.log("This command returns a string with answers separated by |||. Use it when you use showAnswers command. Parameter isRaw (false): if there are any text answer with not 1 answer variant, if isRaw is false it'll choose one of them. But if it's true, it'll get all the variants")
     else if (command === 'putAnswers')
         console.log("Puts text and button answers from string returned by getAnswers")
     else if (command === 'clickAll')
